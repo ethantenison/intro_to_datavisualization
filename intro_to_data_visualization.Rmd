@@ -1,0 +1,82 @@
+---
+title: "Introduction to Data Visualization in R"
+description: |
+  Analyzing Kenya Census data 
+author:
+  - name: Ethan Tenison 
+    url: https://example.com/norajones
+    affiliation: RGK Center for Philanthropy and Community Service 
+    affiliation_url: https://rgkcenter.org/
+date: "`r Sys.Date()`"
+output:
+  distill::distill_article:
+    code_folding: yes
+    toc: yes
+    toc_float: yes
+  pdf_document: default
+  html_document: 
+    theme: paper
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+  word_document:
+    toc: yes
+---
+
+# A short intro 
+R is a powerful programming language designed specifically for data analysis. It's open source, which means that it is free for anybody who wants to use it. People from all over the world create packages to extend the usability of the language. One domain in R that is especially developed is data visualization. Although R has a built in graphics system, the most impressive visualizations are created using packages developed by other users. There are thousands of different data visualzation packages in R. Some of them are broad and are used by virtually everyone, such as `ggplot2`. Other dataviz packages are used for very specific types of visualizations, such as `visnetwork` which is used to created network graphs for network analysis, or `ggcats` which is used to plot data using, you guessed it CATS.
+
+`Ggplot2`, which is going to be the main focus on this workshop today, is by far the most popular data visualization package. It was developed by R's most famous user Hadley Wickham who is a professor at Rice University. It's based on a book called the "The Grammar of Graphics", which outlines how to concisely describe the components of graphics in programming. As such, `ggplot2` uses a consistent syntax that is easy to learn and understand. 
+
+# The Basics 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+
+#This will install the packages that you do not have installed on your computer.
+# In case these aren't installed, uncomment this and run it.
+# install.packages("ggplot2", "tidyverse", "kableExtra", "janitor")
+
+#Each time you start an R session you must load the packages you want to use  
+library(tidyverse) #A collection of packages that use the same grammar and structure
+library(ggplot2) #A system for creating graphics 
+library(kableExtra) #Package for creating customizable tables 
+library(janitor)#data cleaning package 
+
+```
+
+## Reading data 
+
+R allows us to pull data directly from the internet. You don't have to manually download anything. The data we're going to work with today comes from [rKenyaCensus](https://github.com/Shelmith-Kariuki/rKenyaCensus) courtesy of Kenyan R enthusiast [Shel Kariuki](https://twitter.com/Shel_Kariuki).It includes the 2019 Kenya Population and Housing Census results. You can read more about this dataset on her blog [here](https://shelkariuki.netlify.app/post/rkenyacensus/).
+
+It was republished on `2021-01-19` as part of TidyTuesday. [TidyTuesday](https://github.com/rfordatascience/tidytuesday) is a weekly data project aimed at the R ecosystem. An emphasis is placed on understanding how to summarize and arrange data to make meaningful charts with `ggplot2`, `tidyr`, `dply`r, and other tools in the `tidyverse` ecosystem.
+
+
+```{r reading_data}
+
+gender <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/gender.csv') |> clean_names()
+crops <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/crops.csv') |> clean_names() |> 
+  mutate(sub_county = str_to_title(sub_county))
+households <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/households.csv') |> clean_names()
+
+kenya <- left_join(households, gender, by = "county") |> 
+  left_join(crops, by = c("county" = "sub_county"))
+```
+
+## Preliminary Data Exploration 
+
+
+```{r prelim_exploration}
+
+kable(head(households)) |> 
+  kable_styling(latex_options = "striped")
+
+```
+
+
+
+
+
