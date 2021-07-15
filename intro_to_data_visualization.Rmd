@@ -40,13 +40,17 @@ knitr::opts_chunk$set(
 )
 #This will install the packages that you do not have installed on your computer.
 # In case these aren't installed, uncomment this and run it.
-# install.packages("ggplot2", "tidyverse", "kableExtra", "janitor")
+# install.packages("ggplot2", "tidyverse", "kableExtra", "janitor", "imager", "grid")
 
 #Each time you start an R session you must load the packages you want to use  
 library(tidyverse) #A collection of packages that use the same grammar and structure
 library(ggplot2) #A system for creating graphics 
 library(kableExtra) #Package for creating customizable tables 
 library(janitor)#data cleaning package 
+library(imager) #image processing
+library(grid) #for adding custom plotting elements 
+
+ 
 
 #Turning off scientific notation 
 options(scipen=999)
@@ -87,9 +91,13 @@ kable(head(kenya)) |>
 
 ```{r scatterplot}
 
+theme_set(theme_bw())
+
 ggplot(kenya, aes(x = population, y = average_household_size)) +
-  geom_jitter() +
-  stat_smooth(method=lm)
+  geom_jitter(aes(color = average_household_size)) +
+  stat_smooth(method=lm) +
+  scale_x_continuous(labels=scales::comma) +
+  labs(y = "Average Household Size", x = "Population")
 
 
 ```
@@ -101,16 +109,50 @@ ggplot(kenya, aes(x = population, y = average_household_size)) +
 
 ```{r barplot}
 
-kenya_bar <- kenya |> 
-  pivot_longer(tea:khat_miraa, names_to = "agriculture_product", values_to = "value") |> 
-  mutate(value = replace_na(value, 0)) |> 
-  group_by(agriculture_product) |> 
-  summarize(sum(value)) |> 
-  rename("total_value" = "sum(value)")
+#Data prep for plotting
+kenya_bar <- kenya |>
+  pivot_longer(tea:khat_miraa, names_to = "agriculture_product", values_to = "value") |>
+  mutate(value = replace_na(value, 0)) |>
+  group_by(agriculture_product) |>
+  summarize(sum(value)) |>
+  rename("total_value" = "sum(value)") |>
+  mutate(
+    agriculture_product = replace(
+      agriculture_product,
+      agriculture_product == "khat_miraa",
+      "khat miraa"
+    ),
+    agriculture_product = replace(
+      agriculture_product,
+      agriculture_product == "cashew_nut",
+      "cashew"
+    ),
+    agriculture_product = str_to_title(agriculture_product)
+  )
 
 
-ggplot(kenya_bar, aes(x = agriculture_product, y = sort(total_value))) + 
-  geom_bar(stat = "identity")
+#Adding an image 
+im <- load.image("https://cdn.shopify.com/s/files/1/0594/9309/files/Photo_01_Camellia_sinensis_-_Kohler_s_Medizinal-Pflanzen-025_sfondo_bianco.jpg")
+g <- rasterGrob(im, interpolate = TRUE, width = .4, height = .6)
+
+#Ggplot
+theme_set(theme_minimal())
+ggplot(kenya_bar, aes(x = agriculture_product,
+                      y = sort(total_value))) +
+  geom_bar(stat = "identity", fill = "darkgreen") +
+  coord_flip() +
+  scale_y_continuous(labels=scales::comma) +
+  labs(title = "Population Growing Crops in Kenya") +
+  annotation_custom(g, xmin=0, xmax=7, ymin=500000, ymax=1000000) +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+    
+  ) 
+
+
+
 
 ```
 
