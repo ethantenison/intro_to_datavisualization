@@ -33,9 +33,11 @@ R is a powerful programming language designed specifically for data analysis. It
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-
-
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
 #This will install the packages that you do not have installed on your computer.
 # In case these aren't installed, uncomment this and run it.
 # install.packages("ggplot2", "tidyverse", "kableExtra", "janitor")
@@ -45,6 +47,9 @@ library(tidyverse) #A collection of packages that use the same grammar and struc
 library(ggplot2) #A system for creating graphics 
 library(kableExtra) #Package for creating customizable tables 
 library(janitor)#data cleaning package 
+
+#Turning off scientific notation 
+options(scipen=999)
 
 ```
 
@@ -63,7 +68,9 @@ crops <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidy
 households <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/households.csv') |> clean_names()
 
 kenya <- left_join(households, gender, by = "county") |> 
-  left_join(crops, by = c("county" = "sub_county"))
+  left_join(crops, by = c("county" = "sub_county")) |> 
+  select(!total) |> 
+  filter(county != "Kenya")
 ```
 
 ## Preliminary Data Exploration 
@@ -71,12 +78,39 @@ kenya <- left_join(households, gender, by = "county") |>
 
 ```{r prelim_exploration}
 
-kable(head(households)) |> 
+kable(head(kenya)) |> 
   kable_styling(latex_options = "striped")
+
+```
+
+# Scatter Plot 
+
+```{r scatterplot}
+
+ggplot(kenya, aes(x = population, y = average_household_size)) +
+  geom_jitter() +
+  stat_smooth(method=lm)
+
 
 ```
 
 
 
+# Bar plot
 
+
+```{r barplot}
+
+kenya_bar <- kenya |> 
+  pivot_longer(tea:khat_miraa, names_to = "agriculture_product", values_to = "value") |> 
+  mutate(value = replace_na(value, 0)) |> 
+  group_by(agriculture_product) |> 
+  summarize(sum(value)) |> 
+  rename("total_value" = "sum(value)")
+
+
+ggplot(kenya_bar, aes(x = agriculture_product, y = sort(total_value))) + 
+  geom_bar(stat = "identity")
+
+```
 
