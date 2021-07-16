@@ -1,5 +1,5 @@
 ---
-title: "Introduction to Data Visualization in R"
+title: "Data Visualization in R"
 description: |
   Analyzing Kenya Census data 
 author:
@@ -24,15 +24,17 @@ output:
     toc: yes
 ---
 
-# A short intro 
-R is a powerful programming language designed specifically for data analysis. It's open source, which means that it is free for anybody who wants to use it. People from all over the world create packages to extend the usability of the language. One domain in R that is especially developed is data visualization. Although R has a built in graphics system, the most impressive visualizations are created using packages developed by other users. There are thousands of different data visualzation packages in R. Some of them are broad and are used by virtually everyone, such as `ggplot2`. Other dataviz packages are used for very specific types of visualizations, such as `visnetwork` which is used to created network graphs for network analysis, or `ggcats` which is used to plot data using, you guessed it CATS.
+# R and Ggplot2 
+R is a powerful programming language designed specifically for data analysis. It's open source, which means that it is free for anybody who wants to use it. People from all over the world create packages to extend the usability of the language. One domain in R that is especially developed is data visualization. Although R has a built in graphics system, the most impressive visualizations are created using packages developed by other users. There are thousands of different data visualization packages in R. Some of them are broad and are used by virtually everyone, such as **ggplot2**. Other data viz packages are used for very specific types of visualizations, such as **visnetwork** which is used to created network graphs for network analysis, or **ggcats** which is used to plot data using, you guessed it CATS.
 
-`Ggplot2`, which is going to be the main focus on this workshop today, is by far the most popular data visualization package. It was developed by R's most famous user Hadley Wickham who is a professor at Rice University. It's based on a book called the "The Grammar of Graphics", which outlines how to concisely describe the components of graphics in programming. As such, `ggplot2` uses a consistent syntax that is easy to learn and understand. 
+**Ggplot2**, which is going to be the main focus on this workshop today, is by far the most popular data visualization package. It was developed by R's most famous user Hadley Wickham who is a professor at Rice University. It's based on a book called the "The Grammar of Graphics", which outlines how to concisely describe the components of graphics in programming. As such, **ggplot2** uses a consistent syntax that is easy to learn and understand. 
 
-# The Basics 
+# The Basics
 
+## Loading Pacakges 
+The first thing you do is load all of the packages you plan on using during your R session. Although R has some built in functionality, the true power of R comes from its open source ecosystem. In order to run the code snippet you can click the green arrow in the top right of the screen. Since this may be your first time using some of these packages, you will need to un-comment the **install.packages()** function I prepared for all of you.Once you install the packages you do not have to again unless the author releases an update. 
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(
 	echo = FALSE,
 	message = FALSE,
@@ -40,7 +42,7 @@ knitr::opts_chunk$set(
 )
 #This will install the packages that you do not have installed on your computer.
 # In case these aren't installed, uncomment this and run it.
-# install.packages("ggplot2", "tidyverse", "kableExtra", "janitor", "imager", "grid")
+# install.packages("ggplot2", "tidyverse", "kableExtra", "janitor", "imager", "grid", "sf", "ggspatial", "formattable", "scales")
 
 #Each time you start an R session you must load the packages you want to use  
 library(tidyverse) #A collection of packages that use the same grammar and structure
@@ -49,66 +51,181 @@ library(kableExtra) #Package for creating customizable tables
 library(janitor)#data cleaning package 
 library(imager) #image processing
 library(grid) #for adding custom plotting elements 
+library(sf) #for dealing with shapefiles 
+library(ggspatial)#adding mapping features to ggplot 
+library(formattable) #formats numeric values and tables  
+library(scales) #allows formatting of numbers in ggplot 
 
- 
+
 
 #Turning off scientific notation 
 options(scipen=999)
 
 ```
 
-## Reading data 
+## The **iris** dataset
 
-R allows us to pull data directly from the internet. You don't have to manually download anything. The data we're going to work with today comes from [rKenyaCensus](https://github.com/Shelmith-Kariuki/rKenyaCensus) courtesy of Kenyan R enthusiast [Shel Kariuki](https://twitter.com/Shel_Kariuki).It includes the 2019 Kenya Population and Housing Census results. You can read more about this dataset on her blog [here](https://shelkariuki.netlify.app/post/rkenyacensus/).
+The **iris** data set is pre-loaded when you install R. It includes a data frame of three species of flowers and information about their petal and sepal length. 
 
-It was republished on `2021-01-19` as part of TidyTuesday. [TidyTuesday](https://github.com/rfordatascience/tidytuesday) is a weekly data project aimed at the R ecosystem. An emphasis is placed on understanding how to summarize and arrange data to make meaningful charts with `ggplot2`, `tidyr`, `dply`r, and other tools in the `tidyverse` ecosystem.
+To start with ggplot, we first have to declare the foundation for our plot using the **ggplot()** function. Here you specify the data your going to use as well specific elements of the plot that you want to remain consistent throughout the plot building process. This only sets the foundation, you have to add geoms to tell ggplot what kind of plot you want to create. To add elements to the plot add **+** to your code first.   
+
+```{r iris}
+
+iris <- iris 
+
+ggplot(data = iris, aes(x= Sepal.Length, y = Sepal.Width)) +
+  geom_point() 
+
+```
+### Adding labels
+
+To fix the labels and add a title, add the **labs()** function.
+
+```{r labels}
+ggplot(data = iris, aes(x= Sepal.Length, y = Sepal.Width)) +
+  geom_point() +
+  labs(x = "Sepal Length",
+       y = "Sepal Width",
+       title = "Iris Petal Size Analysis\nData Source: Anderson (1935)")
+
+```
+### Theme Customization
+Let’s now customize the above with **theme()**:
+
+```{r theme}
+ptcolor <- 'grey20' # plot text color
+ggplot(data = iris, aes(x= Sepal.Length, y = Sepal.Width)) +
+  geom_point() +
+  labs(x = "Sepal Length",
+       y = "Sepal Width",
+       title = "Iris Petal Size Analysis\nData Source: Anderson (1935)") +
+  theme(
+    plot.title=element_text(size=14, lineheight=0.8, color=ptcolor, hjust=0.5),
+    axis.title.x=element_text(color=ptcolor),
+    axis.title.y=element_text(color=ptcolor))
+
+```
+### Adding color and shape 
+
+The above plots are rather boring by themselves, so now we are going to add color and shape to make our visualization pop.
 
 
-```{r reading_data}
+```{r color_shape}
 
-gender <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/gender.csv') |> clean_names()
-crops <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/crops.csv') |> clean_names() |> 
+ggplot(data = iris, aes(x= Sepal.Length, y = Sepal.Width)) +
+  geom_point(aes(colour=Species), shape=15, size=1.5) +
+  labs(x = "Sepal Length",
+       y = "Sepal Width",
+       title = "Iris Petal Size Analysis\nData Source: Anderson (1935)") +
+  theme(
+    plot.title=element_text(size=14, lineheight=0.8, color=ptcolor, hjust=0.5),
+    axis.title.x=element_text(color=ptcolor),
+    axis.title.y=element_text(color=ptcolor))
+
+
+```
+
+# Kenya Census Data
+
+The data we're going to work with today comes from [rKenyaCensus](https://github.com/Shelmith-Kariuki/rKenyaCensus) courtesy of Kenyan R enthusiast [Shel Kariuki](https://twitter.com/Shel_Kariuki). It includes the 2019 Kenya Population and Housing Census results. You can read more about this data set on her blog [here](https://shelkariuki.netlify.app/post/rkenyacensus/).
+
+It was republished on **2021-01-19** as part of TidyTuesday. [TidyTuesday](https://github.com/rfordatascience/tidytuesday) is a weekly data project aimed at the R ecosystem. An emphasis is placed on understanding how to summarize and arrange data to make meaningful charts with **ggplot2**, **tidyr**, **dplyr**, and other tools in the **tidyverse** ecosystem.
+
+
+## Data Cleaning
+
+
+R allows us to pull data directly from the internet. You don't have to manually download anything. It's actually three separate data sets on crops, gender, and household size. In order to join them all together I did have to do some minor data cleaning. 
+
+```{r reading_data, message=FALSE, warning=FALSE}
+
+gender <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/gender.csv') |>
+  clean_names() |> 
+  mutate(
+    county = replace(
+      county,
+      county == "Nairobi City",
+      "Nairobi"
+    ))
+crops <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/crops.csv') |>
+  clean_names() |> 
   mutate(sub_county = str_to_title(sub_county))
-households <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/households.csv') |> clean_names()
+
+households <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-19/households.csv') |>
+  clean_names() |> 
+  mutate(
+    county = replace(
+      county,
+      county == "NairobiCity",
+      "Nairobi"
+    ),
+    county = gsub("([a-z])([A-Z])","\\1 \\2",county))
 
 kenya <- left_join(households, gender, by = "county") |> 
   left_join(crops, by = c("county" = "sub_county")) |> 
   select(!total) |> 
   filter(county != "Kenya")
+
+
 ```
 
 ## Preliminary Data Exploration 
 
+The **kenya** data frame contains 17 different variables, which appear as columns. Each row represents a county, of which there are 47 in the country. 
 
-```{r prelim_exploration}
+```{r prelim_exploration, message=FALSE, warning=FALSE}
 
-kable(head(kenya)) |> 
-  kable_styling(latex_options = "striped")
+kable(kenya) |> 
+  kable_styling(latex_options = "striped") |> 
+  scroll_box(width = "100%", height = "400px")
 
 ```
 
-# Scatter Plot 
+## Scatter Plot 
+
+This scatter plot is very similar to the one we created above. Although, I add some additional annotation using **annotate()**, and I changed the x axis to include thousands separated numbers using the **scales** package.  
 
 ```{r scatterplot}
 
 theme_set(theme_bw())
 
-ggplot(kenya, aes(x = population, y = average_household_size)) +
-  geom_jitter(aes(color = average_household_size)) +
-  stat_smooth(method=lm) +
-  scale_x_continuous(labels=scales::comma) +
-  labs(y = "Average Household Size", x = "Population")
+ggplot(data = kenya, aes(x = population, y = average_household_size)) +
+  geom_point(color = "blue", size = 3) +
+  #If you would like to see a trend line with confidence intervals, un-comment 
+  #stat_smooth(method = lm) + 
+  scale_x_continuous(labels = scales::comma) +
+  annotate(
+    geom = "text",
+    x = 4337080,
+    y = 2.9,
+    label = "Nairobi",
+    hjust = 1.2
+  ) +
+  annotate(geom = "point", x = 4337080, y = 2.9, colour = "orange", size = 4) +
+  annotate(geom = "point", x = 4337080, y = 2.9, colour = "blue") +
+  labs(y = "Average Household Size", x = "Population", title = "Household Size by Population in Kenyan Counties") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none",
+    axis.title.x = element_text(vjust = -3),
+    axis.title.y = element_text(vjust = 3),
+    plot.margin = margin(20, 10, 10, 20)
+  )
 
 
 ```
 
 
 
-# Bar plot
+## Bar plot
 
+Now lets look at the variables from the crops data set that includes how many people are employed growing different crops per county. Lets visualize this by creating a bar plot.  
 
-```{r barplot}
+### Data Prep
 
+In order to do this we have to manipulate the data so that crops are one variable and number of people working on those crops are in another. In order to do that we need to convert our data frame from wide to tall one using **pivot_longer()**. 
+
+```{r bar_prep}
 #Data prep for plotting
 kenya_bar <- kenya |>
   pivot_longer(tea:khat_miraa, names_to = "agriculture_product", values_to = "value") |>
@@ -131,28 +248,227 @@ kenya_bar <- kenya |>
   )
 
 
+```
+
+### Ploting and adding an image 
+
+Now that we have the data the way we want it to be, we can start building the ggplot. To create bar plots you use **geom_bar()**. Because x axis is crowded, you can flip the axes to add more space for the labels. In addition, for this plot the x and y axis labels were removed because you don't need them to understand the plot. Generally speaking, simpler plots are easier to understand and make more impact than a complicated one. Another cool thing I added was a picture of the tea plant, which is the agricultural product with the highest number of workers in Kenya. 
+
+```{r barplot}
+
 #Adding an image 
 im <- load.image("https://cdn.shopify.com/s/files/1/0594/9309/files/Photo_01_Camellia_sinensis_-_Kohler_s_Medizinal-Pflanzen-025_sfondo_bianco.jpg")
-g <- rasterGrob(im, interpolate = TRUE, width = .4, height = .6)
+g <- rasterGrob(im, interpolate = TRUE)
 
 #Ggplot
 theme_set(theme_minimal())
-ggplot(kenya_bar, aes(x = agriculture_product,
+ggplot(data = kenya_bar, aes(x = agriculture_product,
                       y = sort(total_value))) +
   geom_bar(stat = "identity", fill = "darkgreen") +
   coord_flip() +
   scale_y_continuous(labels=scales::comma) +
   labs(title = "Population Growing Crops in Kenya") +
-  annotation_custom(g, xmin=0, xmax=7, ymin=500000, ymax=1000000) +
+  annotation_custom(g, xmin=1.5, xmax=6.5, ymin=500000, ymax=1000000) +
   theme(
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5),
+    plot.margin = margin(1, 1, 1, 1, "cm")
     
   ) 
 
 
+```
+
+## Radial Barplot 
+
+Radial plots are not something you'd want to include in a research paper, but they are really interesting for data exploration when you have a large number of categories. This radial plot was constructed using county population. Because Nairobi is twice as large as the next most populous county, I square rooted population in order to get all of the bars to fit. While it is much more complicated, it just goes to show you how creative data visualization can be in R. If you have an idea about how you want a plot to look like, you can probably create it in R. You can't always do that in Tableau, which has a fixed number of plots you can create. 
+
+```{r radial_barplot, fig.height=10, fig.width = 10, dev='jpeg'}
+
+kenya <- kenya |> 
+  mutate(id = seq(1,47),
+         poplabel = formattable::comma(population, big.mark = ",", format = "d"),
+         poplabel = as.character(poplabel),
+         tolabel = paste0(county,"  ", poplabel),
+         barsize = sqrt(population)/2) |> 
+  as.data.frame()
+
+
+         
+# ----- This section prepare a data frame for labels ---- #
+# Get the name and the y position of each label
+label_data <- kenya
+ 
+# calculate the ANGLE of the labels
+number_of_bar <- nrow(label_data)
+angle <-  90 - 360 * (label_data$id-0.5) /number_of_bar     # I subtract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+ 
+# calculate the alignment of labels: right or left
+# If I am on the left part of the plot, my labels have currently an angle < -90
+label_data$hjust<-ifelse( angle < -90, 1, 0)
+ 
+# flip angle BY to make them readable
+label_data$angle<-ifelse(angle < -90, angle+180, angle)
+# ----- ------------------------------------------- ---- #
+
+p <- ggplot(data = kenya, aes(x = as.factor(id), y = barsize, fill = barsize)) +
+  geom_bar(stat = "identity") + #, fill = alpha("blue", 0.7)
+  geom_text(
+    data = label_data,
+    aes(
+      x = id,
+      y = barsize + 10,
+      label = county,
+      hjust = hjust
+    ),
+    color = "black",
+    fontface = "bold",
+    alpha = 0.6,
+    size = 5,
+    angle = label_data$angle,
+    inherit.aes = FALSE
+  ) +
+  ylim(-600, 1082) +
+  scale_fill_viridis_c() +
+  theme_minimal() +
+  labs(title = "Kenya Population by County") +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-1, 4), "cm"),
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  # This makes the coordinate polar instead of Cartesian.
+  coord_polar(start = 0)
+
+p
+
+#ggsave("radial_plot.png")
+```
+
+# Mapping
+
+One of the reasons I chose this data set was because I knew I could add geographic data as well. R has a whole suite of GIS related packages. For this workshop I primarily used **ggspatial**, which provides GIS extension to **ggplot2**. 
+
+
+## Data Prep
+
+Working with GIS data can be a little complicated because you have to work with shape files. I found the Kenya Counties shape file on [openAfrica](https://africaopendata.org/dataset/kenya-counties-shapefile). It includes about 5 different types of shape files, but we will only use the one with the extension **.shp**. That being said, all of the others must be present in the directory in order for it to work. I read the shape file with the function **st_read()**, and then join the data frame to our original **kenya** data frame. 
+
+```{r gis_prep, message=FALSE, warning=FALSE}
+kenya_counties <- st_read(
+  "data/County.shp") |>
+  select(Name, geometry) |>
+  clean_names() |> 
+  mutate(name = replace(
+      name,
+      name == "Murang?a",
+      "Murang'a"
+    ))
+
+kenya_sf <- kenya |>
+  left_join(kenya_counties, by = c("county" = "name")) |> 
+  st_as_sf()
 
 
 ```
 
+## Ggspatial 
+
+Using **ggspatial** is super easy. All you have to do is use the **geom_sf** function and set a couple parameters.  
+
+```{r map, fig.height=10, fig.width = 10, dev='jpeg'}
+
+
+ggplot(kenya_sf) +
+  geom_sf(aes(fill = farming), alpha = 0.8) +
+  labs(title = "Farming Population in Kenya",
+       subtitle = "by County",
+       fill = "Population") +
+  scale_fill_viridis_c(label = scales::comma) +
+  annotation_scale(location = "bl", width_hint = 0.5) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+        pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+        style = north_arrow_fancy_orienteering) +
+  theme(
+        plot.title=element_text(size=24, lineheight=0.8),
+        text = element_text(size=20),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+#ggsave("kenya_farming.png", width = 12, height = 12, dpi = 300)
+
+```
+
+### Adding a tile layer
+
+By itself **geom_sf()** looks good, but you often want to include a base map to show where water is or specific geographic features. You can do this by using the **annotation_map_tile()** function. 
+
+```{r map_tile, fig.height=10, fig.width = 10, dev='jpeg'}
+
+
+ggplot(kenya_sf) +
+  annotation_map_tile(type = "stamenwatercolor") +
+  geom_sf(aes(fill = farming), alpha = 0.8) +
+  labs(title = "Farming Population in Kenya",
+       subtitle = "by County",
+       fill = "Population") +
+  scale_fill_viridis_c(label = scales::comma) +
+  annotation_scale(location = "bl", width_hint = 0.5) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+        pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+        style = north_arrow_fancy_orienteering) +
+  theme(
+        plot.title=element_text(size=24, lineheight=0.8),
+        text = element_text(size=20),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+#ggsave("kenya_farming.png", width = 12, height = 12, dpi = 300)
+
+```
+
+## Faceting Plots in Ggplot
+
+Faceting is great if you want to visualize multiple plots at the same time. This examples includes maps, but you can facet any type of plot with the function **facet_wrap()**. This facet plot is differentiated by using the variable **agriculture_product**, so that each map shows which areas of the country different produce are grown. 
+
+```{r facet_map, fig.height=10, fig.width = 10, dev='jpeg'}
+
+kenya_sf_facet <- kenya_sf |> 
+  rename(Cashew = "cashew_nut",
+         Khat = "khat_miraa") |>
+  pivot_longer(cols = farming:Khat, names_to = "agriculture_product", values_to = "pop") |> 
+  select(county, agriculture_product, pop, geometry) |> 
+  st_as_sf() |> 
+  mutate(agriculture_product = str_to_title(agriculture_product))
+
+
+theme_set(theme_minimal())
+kenya_facet <- ggplot(kenya_sf_facet) +
+  geom_sf(aes(fill = pop)) +
+  facet_wrap( ~ agriculture_product) +
+  scale_fill_viridis_c() +
+  theme(
+    plot.title=element_text(size=24, lineheight=0.8),
+    text = element_text(size=20),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+kenya_facet
+
+#ggsave("kenya_facet.png", width = 15, height = 12, dpi = 300)
+
+```
+
+
+# Thank you for participating! Any questions? 
