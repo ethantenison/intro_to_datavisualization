@@ -13,16 +13,18 @@ output:
     code_folding: yes
     toc: yes
     toc_float: yes
-  pdf_document: default
   html_document: 
     theme: paper
     toc: true
     toc_float:
       collapsed: false
       smooth_scroll: false
+  pdf_document: default
   word_document:
     toc: yes
 ---
+
+
 
 # R and Ggplot2 
 R is a powerful programming language designed specifically for data analysis. It's open source, which means that it is free for anybody who wants to use it. People from all over the world create packages to extend the usability of the language. One domain in R that is especially developed is data visualization. Although R has a built in graphics system, the most impressive visualizations are created using packages developed by other users. There are thousands of different data visualization packages in R. Some of them are broad and are used by virtually everyone, such as **ggplot2**. Other data viz packages are used for very specific types of visualizations, such as **visnetwork** which is used to created network graphs for network analysis, or **ggcats** which is used to plot data using, you guessed it CATS.
@@ -55,7 +57,6 @@ library(sf) #for dealing with shapefiles
 library(ggspatial)#adding mapping features to ggplot 
 library(formattable) #formats numeric values and tables  
 library(scales) #allows formatting of numbers in ggplot 
-
 
 
 #Turning off scientific notation 
@@ -192,7 +193,7 @@ theme_set(theme_bw())
 ggplot(data = kenya, aes(x = population, y = average_household_size)) +
   geom_point(color = "blue", size = 3) +
   #If you would like to see a trend line with confidence intervals, un-comment 
-  #stat_smooth(method = lm) + 
+  stat_smooth(method = lm) + 
   scale_x_continuous(labels = scales::comma) +
   annotate(
     geom = "text",
@@ -447,7 +448,9 @@ kenya_sf_facet <- kenya_sf |>
   pivot_longer(cols = farming:Khat, names_to = "agriculture_product", values_to = "pop") |> 
   select(county, agriculture_product, pop, geometry) |> 
   st_as_sf() |> 
-  mutate(agriculture_product = str_to_title(agriculture_product))
+  mutate(agriculture_product = str_to_title(agriculture_product)) |>
+  filter(agriculture_product != "Farming") |> 
+  arrange(desc(agriculture_product))
 
 
 theme_set(theme_minimal())
@@ -455,8 +458,9 @@ kenya_facet <- ggplot(kenya_sf_facet) +
   geom_sf(aes(fill = pop)) +
   facet_wrap( ~ agriculture_product) +
   scale_fill_viridis_c() +
+  labs(title = "Agriculture Workers by Crop in Kenya") +
   theme(
-    plot.title=element_text(size=24, lineheight=0.8),
+    plot.title=element_text(size=24, lineheight=0.8, hjust = 0.5),
     text = element_text(size=20),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
